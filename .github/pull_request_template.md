@@ -9,5 +9,5 @@
 - [ ] No secrets, tokens, keys or certificates
 - [ ] Read-only by default, or changes are behind `-Apply` with a `-WhatIf` path
 - [ ] Comment-based help with at least one example
-- [ ] README script table updated
+- [ ] Guide added under docs/<platform>/ and one row added to the README table
 - [ ] Tested against an authorized tenant and the output shared here is scrubbed

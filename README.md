@@ -2,12 +2,14 @@
 
 # SecOps PowerShell
 
-**Field-tested PowerShell for security analysts.** Read-only checks first, clear output, and nothing that ties back to a customer.
+**Ready-to-run PowerShell for security analysts.**
+Most scripts only read. Every one explains itself. Nothing in here names a customer.
 
 ![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-5391FE?logo=powershell&logoColor=white)
-![Microsoft Graph](https://img.shields.io/badge/Microsoft%20Graph-Authentication%20module-0078D4?logo=microsoft&logoColor=white)
 ![Default mode](https://img.shields.io/badge/default-read--only-2ea44f)
 ![PII](https://img.shields.io/badge/PII-none-critical)
+
+[Scripts](#scripts) · [How to run a script](#how-to-run-a-script) · [Reading the results](#reading-the-results) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -15,122 +17,105 @@
 
 ## Scripts
 
-| Script | Area | What it answers | Changes anything? |
-|---|---|---|---|
-| [`Check-CwCloudBackupExposure.ps1`](scripts/m365/Check-CwCloudBackupExposure.ps1) | Microsoft 365 / Entra ID | Was this tenant exposed to the Oct 2026 ConnectWise Cloud Backup (SkyKick) supply-chain attack? | No |
+Pick the script for your question, open its guide, then follow the steps below.
 
-New scripts are listed here as they land.
+| Script | Platform | Question it answers | Changes anything? | Guide |
+|---|---|---|---|---|
+| `Check-CwCloudBackupExposure.ps1` | Microsoft 365 | Was this tenant exposed to the ConnectWise Cloud Backup (SkyKick) supply-chain attack? | No | [Open](docs/m365/Check-CwCloudBackupExposure.md) |
 
 ---
 
-## Quick start
+## How to run a script
+
+You only do steps 1 and 2 once per computer.
+
+### 1. Install PowerShell 7
+
+Windows PowerShell 5.1 is not enough. Check what you have:
 
 ```powershell
-# One-time setup
+$PSVersionTable.PSVersion
+```
+
+If the major version is below 7, install it:
+
+```powershell
+winget install Microsoft.PowerShell      # Windows
+brew install --cask powershell           # macOS
+```
+
+### 2. Install the module the script needs
+
+Each guide lists its module. For the Microsoft 365 scripts:
+
+```powershell
 Install-Module Microsoft.Graph.Authentication -Scope CurrentUser
+```
 
-# Run a check against one tenant (opens a browser sign-in)
+Answer **Y** if it asks to trust the PowerShell Gallery.
+
+### 3. Get the scripts
+
+```powershell
+git clone git@github.com:sschlangen-results/secops-powershell.git
+cd secops-powershell
+```
+
+No git? Use the green **Code** button on this page, choose **Download ZIP**, and unzip it. On Windows, right-click the zip, choose **Properties**, and tick **Unblock** before unzipping, or the scripts will refuse to run.
+
+### 4. Run it
+
+Open PowerShell 7 (`pwsh`) in the repo folder and run the script with the customer's domain:
+
+```powershell
 pwsh -NoProfile -File .\scripts\m365\Check-CwCloudBackupExposure.ps1 -Tenant customer.com
-
-# Sign in on another device instead
-pwsh -NoProfile -File .\scripts\m365\Check-CwCloudBackupExposure.ps1 -Tenant customer.com -DeviceCode
-
-# GCC High or DoD tenants only. GCC Moderate uses the default.
-pwsh -NoProfile -File .\scripts\m365\Check-CwCloudBackupExposure.ps1 -Tenant customer.us -Environment USGov
 ```
 
-Every Graph script signs out before it starts, confirms it landed in the tenant you named, and stops if it did not. That keeps a cached token from the last customer from answering for this one.
+### 5. Sign in
+
+A browser window opens. Sign in with **your admin account for that customer**. The script checks that you landed in the right tenant and stops if you did not.
+
+No browser on that machine? Add `-DeviceCode`, then open the link it prints on any device and enter the code.
+
+### 6. Read the results
+
+The script prints its findings and a one-line summary at the end. See [Reading the results](#reading-the-results).
+
+> **Tip:** every script has built-in help. `Get-Help .\scripts\m365\Check-CwCloudBackupExposure.ps1 -Full` shows its options and examples.
 
 ---
 
-## ConnectWise Cloud Backup exposure check
+## Reading the results
 
-<details>
-<summary><b>Background</b></summary>
+All scripts use the same colors.
 
-<br>
+| You see | It means | What to do |
+|---|---|---|
+| 🔴 Red line | A hard finding | Stop and escalate. The script's guide says what to do next. |
+| 🟡 Yellow line | Something to check by hand | Confirm it is expected, like your own automation or a tool update. |
+| Plain line | Context | Nothing to do. |
+| Last line | Count of hard findings | Zero means clean. |
 
-In October 2026 an attacker used the shared secret for ConnectWise Cloud Backup (formerly SkyKick) to sign in to customer tenants as the backup application. There was no user sign-in, so MFA and Conditional Access did not apply. In some tenants the Cloud Management service principals gave themselves directory roles, most often Exchange Administrator, and added credentials for persistence. ConnectWise disabled the seven app identities on 2026-10-17, but that does not remove anything planted inside a tenant, and tokens already issued stay valid until they expire.
+Results can contain customer data. Do not paste raw output into tickets, chat or pull requests. Summarize it.
 
-Only the Cloud Backup and Cloud Management product line is named. ConnectWise Manage, RMM and ScreenConnect are not.
+---
 
-</details>
+## Common problems
 
-<details>
-<summary><b>What it checks</b></summary>
-
-<br>
-
-1. The seven ConnectWise / SkyKick app identities, plus any app with "SkyKick" in its name
-2. For any found: directory roles held, app permissions granted, credentials attached
-3. Secrets or certificates added to **any** app or service principal since 2026-10-13
-4. Directory audit since 2026-10-13: role assignments, credential adds, consents, app permission grants
-5. Service principal sign-ins from the attacker IP (needs Entra ID P1)
-
-</details>
-
-<details>
-<summary><b>Reading the output</b></summary>
-
-<br>
-
-| Color | Meaning |
+| Problem | Fix |
 |---|---|
-| Red | Hard finding. One of the seven apps, activity by one of them, or a sign-in from the attacker IP. |
-| Yellow | Review by hand. A new credential or a SkyKick name match. |
-| Plain | Context. Usually your own automation, user consents, PIM activations or MSP tool refreshes. |
-
-The last line prints the count of hard findings. Zero red lines plus no unexplained credentials is a clean result.
-
-</details>
-
-<details>
-<summary><b>If you get a finding</b></summary>
-
-<br>
-
-Get approval and a ticket before touching the tenant. Then: disable the seven service principals, remove any directory roles they hold, remove credentials added to any app since 2026-10-13, review OAuth grants and Graph activity, and revoke the apps' tokens. Revoking user sessions does not end app access.
-
-</details>
-
-**Permissions:** delegated `Application.Read.All`, `Directory.Read.All`, `AuditLog.Read.All`, `RoleManagement.Read.Directory`. Global Reader plus Reports Reader is enough.
-
----
-
-## Rules for this repo
-
-These apply to every commit and every pull request.
-
-- **No PII of any kind.** No names, emails, phone numbers, usernames, hostnames, IP addresses of customer assets, tenant IDs or customer domains. Use `contoso.com` style placeholders.
-- **No customer names.** A script is about a technique, not a client.
-- **No secrets.** No passwords, keys, tokens, certificates or connection strings, not even expired ones.
-- **Read-only by default.** Anything that changes a tenant or host needs a `-Apply` switch, a `-WhatIf` path, and a clear warning at the top of the file.
-- **Defang indicators in docs.** Write `198.51.100[.]7` and `bad[.]example`. Code may hold the live value it needs to match.
-- **Stop on the wrong tenant.** Graph scripts sign out first, verify the tenant, and use process-scoped auth.
-- **Comment-based help on every script.** Synopsis, description, requirements and at least one example.
-
----
-
-## Layout
-
-```
-scripts/
-  m365/        Microsoft 365, Entra ID, Exchange Online, Purview
-.github/
-  pull_request_template.md
-```
-
-New areas get their own folder under `scripts/` when the first script for them lands.
+| `running scripts is disabled on this system` | Run it as shown above with `pwsh -File`, or once run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`. Unblock the zip if you downloaded one. |
+| `The term 'Connect-MgGraph' is not recognized` | Step 2 was skipped. Install the module, then open a new PowerShell window. |
+| `Signed in to '...' which does not own '...'` | You signed in to a different customer. Run it again and pick the right account. |
+| `Insufficient privileges` or `Authorization_RequestDenied` | Your account needs read roles in that tenant. Each guide lists them. |
+| Government tenant fails to sign in | GCC High and DoD need `-Environment USGov`. GCC Moderate does not. |
 
 ---
 
 ## Contributing
 
-1. Branch from `main`.
-2. Add the script with comment-based help and update the table at the top of this README.
-3. Run it once against a tenant you are authorized to read and confirm it prints nothing identifying.
-4. Open a pull request and complete the checklist.
+Adding a script? Read [CONTRIBUTING.md](CONTRIBUTING.md) first. The short version: **no PII of any kind**, no customer names, no secrets, and read-only unless a switch says otherwise.
 
 <div align="center">
-<sub>Internal use. Run only against environments you are authorized to access.</sub>
+<sub>Internal use. Run scripts only against environments you are authorized to access.</sub>
 </div>
