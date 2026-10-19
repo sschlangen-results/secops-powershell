@@ -22,6 +22,7 @@ Pick the script for your question, open its guide, then follow the steps below.
 | Script | Platform | Question it answers | Changes anything? | Guide |
 |---|---|---|---|---|
 | `Check-CwCloudBackupExposure.ps1` | Microsoft 365 | Was this tenant exposed to the ConnectWise Cloud Backup (SkyKick) supply-chain attack? | No | [Open](docs/m365/Check-CwCloudBackupExposure.md) |
+| `Find-UserProfilePersistence.ps1` | Windows | Is something living in a user's profile and starting itself, like a fake PDF viewer or a dropped Java loader? | No | [Open](docs/windows/Find-UserProfilePersistence.md) |
 
 ---
 
@@ -46,7 +47,7 @@ brew install --cask powershell           # macOS
 
 ### 2. Install the module the script needs
 
-Each guide lists its module. For the Microsoft 365 scripts:
+Each guide lists its module. Windows host scripts need none and also run on Windows PowerShell 5.1, so they work from an RMM. For the Microsoft 365 scripts:
 
 ```powershell
 Install-Module Microsoft.Graph.Authentication -Scope CurrentUser
