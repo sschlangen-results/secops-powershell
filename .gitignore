@@ -1,0 +1,15 @@
+# Script output and local runs: never commit results, they hold tenant data
+*.txt
+*.csv
+*.json
+*.log
+*.xlsx
+output/
+results/
+# Local secrets and editor files
+*.pfx
+*.pem
+*.key
+.env*
+.vscode/
+.DS_Store
