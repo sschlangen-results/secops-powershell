@@ -57,7 +57,7 @@ Answer **Y** if it asks to trust the PowerShell Gallery.
 ### 3. Get the scripts
 
 ```powershell
-git clone git@github.com:sschlangen-results/secops-powershell.git
+git clone https://github.com/sschlangen-results/secops-powershell.git
 cd secops-powershell
 ```
 
@@ -117,5 +117,5 @@ Results can contain customer data. Do not paste raw output into tickets, chat or
 Adding a script? Read [CONTRIBUTING.md](CONTRIBUTING.md) first. The short version: **no PII of any kind**, no customer names, no secrets, and read-only unless a switch says otherwise.
 
 <div align="center">
-<sub>Internal use. Run scripts only against environments you are authorized to access.</sub>
+<sub>Provided as is, with no warranty. Run scripts only against environments you are authorized to access.</sub>
 </div>
