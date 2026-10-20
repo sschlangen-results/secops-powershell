@@ -43,10 +43,10 @@ $conn = @{ TenantId = $Tenant; Scopes = $scopes; Environment = $Environment; NoW
 if ($DeviceCode) { $conn.UseDeviceCode = $true }
 Connect-MgGraph @conn
 
-$G = switch ($Environment) { 'USGov' { 'https://graph.microsoft.us' } 'USGovDoD' { 'https://dod-graph.microsoft.us' } default { 'https://graph.microsoft.com' } }
+$GraphBase = switch ($Environment) { 'USGov' { 'https://graph.microsoft.us' } 'USGovDoD' { 'https://dod-graph.microsoft.us' } default { 'https://graph.microsoft.com' } }
 
 # Confirm we are in the tenant that was asked for before reading anything.
-$org = (Invoke-MgGraphRequest GET "$G/v1.0/organization?`$select=id,displayName,verifiedDomains").value[0]
+$org = (Invoke-MgGraphRequest GET "$GraphBase/v1.0/organization?`$select=id,displayName,verifiedDomains").value[0]
 $domains = $org.verifiedDomains | ForEach-Object { $_.name }
 if ($Tenant -notin $domains -and $Tenant -ne $org.id) {
     throw "Signed in to '$($org.displayName)' ($($org.id)), which does not own '$Tenant'. Stopping."
@@ -79,19 +79,19 @@ $findings = 0
 Write-Host "`n=== 1. ConnectWise / SkyKick service principals ==="
 $found = @()
 foreach ($id in $CwApps.Keys) {
-    $sp = (Get-All "$G/v1.0/servicePrincipals?`$filter=appId eq '$id'&`$select=id,appId,displayName,accountEnabled,keyCredentials,passwordCredentials") | Select-Object -First 1
+    $sp = (Get-All "$GraphBase/v1.0/servicePrincipals?`$filter=appId eq '$id'&`$select=id,appId,displayName,accountEnabled,keyCredentials,passwordCredentials") | Select-Object -First 1
     if ($sp) { $found += $sp; $findings++; Write-Host ("FOUND  {0} ({1})  '{2}'  enabled={3}" -f $CwApps[$id], $id, $sp.displayName, $sp.accountEnabled) -ForegroundColor Red }
     else { Write-Host ("absent {0} ({1})" -f $CwApps[$id], $id) }
 }
-foreach ($s in (Get-All "$G/v1.0/servicePrincipals?`$search=`"displayName:SkyKick`"&`$select=appId,displayName,accountEnabled")) {
+foreach ($s in (Get-All "$GraphBase/v1.0/servicePrincipals?`$search=`"displayName:SkyKick`"&`$select=appId,displayName,accountEnabled")) {
     if (-not $CwApps.Contains($s.appId)) { $findings++; Write-Host ("NAME MATCH 'SkyKick': '{0}' ({1}) enabled={2}" -f $s.displayName, $s.appId, $s.accountEnabled) -ForegroundColor Yellow }
 }
 
 foreach ($sp in $found) {
     Write-Host "`n--- $($sp.displayName) ($($sp.appId)) ---"
-    $roles = Get-All "$G/v1.0/servicePrincipals/$($sp.id)/memberOf" | Where-Object { $_.'@odata.type' -eq '#microsoft.graph.directoryRole' }
+    $roles = Get-All "$GraphBase/v1.0/servicePrincipals/$($sp.id)/memberOf" | Where-Object { $_.'@odata.type' -eq '#microsoft.graph.directoryRole' }
     if ($roles) { $roles | ForEach-Object { Write-Host "  DIRECTORY ROLE: $($_.displayName)" -ForegroundColor Red } } else { Write-Host '  Directory roles: none' }
-    foreach ($a in (Get-All "$G/v1.0/servicePrincipals/$($sp.id)/appRoleAssignments")) {
+    foreach ($a in (Get-All "$GraphBase/v1.0/servicePrincipals/$($sp.id)/appRoleAssignments")) {
         Write-Host ("  App permission on {0}: appRoleId {1} granted {2}" -f $a.resourceDisplayName, $a.appRoleId, $a.createdDateTime)
     }
     foreach ($c in @($sp.passwordCredentials) + @($sp.keyCredentials)) {
@@ -101,8 +101,8 @@ foreach ($sp in $found) {
 
 Write-Host "`n=== 2. Credentials added to any app or service principal since $sinceIso ==="
 $hits = 0
-$objs = @(Get-All "$G/v1.0/applications?`$select=displayName,appId,keyCredentials,passwordCredentials&`$top=999") +
-        @(Get-All "$G/v1.0/servicePrincipals?`$select=displayName,appId,keyCredentials,passwordCredentials&`$top=999")
+$objs = @(Get-All "$GraphBase/v1.0/applications?`$select=displayName,appId,keyCredentials,passwordCredentials&`$top=999") +
+        @(Get-All "$GraphBase/v1.0/servicePrincipals?`$select=displayName,appId,keyCredentials,passwordCredentials&`$top=999")
 foreach ($o in $objs) {
     foreach ($c in @($o.passwordCredentials) + @($o.keyCredentials)) {
         if ($c -and [datetime]$c.startDateTime -ge $Since) {
@@ -119,7 +119,7 @@ $acts = 'Add member to role','Add service principal credentials','Update applica
 $n = 0
 foreach ($act in $acts) {
     $f = [uri]::EscapeDataString("activityDisplayName eq '$act' and activityDateTime ge $sinceIso")
-    foreach ($e in (Get-All "$G/v1.0/auditLogs/directoryAudits?`$filter=$f")) {
+    foreach ($e in (Get-All "$GraphBase/v1.0/auditLogs/directoryAudits?`$filter=$f")) {
         $actor = if ($e.initiatedBy.app.displayName) { 'APP ' + $e.initiatedBy.app.displayName } else { "$($e.initiatedBy.user.userPrincipalName) from $($e.initiatedBy.user.ipAddress)" }
         $tgt = ($e.targetResources | ForEach-Object { $_.displayName } | Where-Object { $_ }) -join ', '
         $perm = ($e.targetResources.modifiedProperties | Where-Object displayName -eq 'AppRole.Value' | ForEach-Object { $_.newValue }) -join ' '
@@ -134,7 +134,7 @@ if ($n -eq 0) { Write-Host 'None.' }
 Write-Host "`n=== 4. Service principal sign-ins from attacker IP since $sinceIso ==="
 try {
     $f = [uri]::EscapeDataString("createdDateTime ge $sinceIso and ipAddress eq '$AttackerIp' and signInEventTypes/any(t: t eq 'servicePrincipal')")
-    $r = Get-All "$G/beta/auditLogs/signIns?`$filter=$f&`$top=50"
+    $r = Get-All "$GraphBase/beta/auditLogs/signIns?`$filter=$f&`$top=50"
     if (-not $r) { Write-Host 'None.' }
     foreach ($s in $r) { $findings++; Write-Host ("{0}  {1} ({2})  error {3}" -f $s.createdDateTime, $s.appDisplayName, $s.appId, $s.status.errorCode) -ForegroundColor Red }
 } catch { Write-Host "Sign-in query failed (needs Entra ID P1 and AuditLog.Read.All): $($_.Exception.Message)" -ForegroundColor Yellow }

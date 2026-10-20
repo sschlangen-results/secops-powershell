@@ -22,6 +22,8 @@ Pick the script for your question, open its guide, then follow the steps below.
 | Script | Platform | Question it answers | Changes anything? | Guide |
 |---|---|---|---|---|
 | `Check-CwCloudBackupExposure.ps1` | Microsoft 365 | Was this tenant exposed to the ConnectWise Cloud Backup (SkyKick) supply-chain attack? | No | [Open](docs/m365/Check-CwCloudBackupExposure.md) |
+| `Find-DeviceCodePhishing.ps1` | Microsoft 365 | Did anyone get phished with an "enter this code" prompt, and did an attacker register a device to stay in? | No | [Open](docs/m365/Find-DeviceCodePhishing.md) |
+| `Invoke-AccountCompromiseReview.ps1` | Microsoft 365 | Is this account compromised, and what could an attacker reach with it? | No | [Open](docs/m365/Invoke-AccountCompromiseReview.md) |
 | `Find-UserProfilePersistence.ps1` | Windows | Is something living in a user's profile and starting itself, like a fake PDF viewer or a dropped Java loader? | No | [Open](docs/windows/Find-UserProfilePersistence.md) |
 
 ---
