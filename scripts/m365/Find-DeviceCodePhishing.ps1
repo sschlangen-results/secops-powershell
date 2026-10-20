@@ -115,6 +115,14 @@ foreach ($p in $dc) {
 Section 2 'Device code sign-ins, successful and blocked'
 $f = & $enc "createdDateTime ge $since and authenticationProtocol eq 'deviceCode'"
 $dcs = Get-All "$GraphBase/beta/auditLogs/signIns?`$filter=$f&`$top=999" 'device code sign-ins'
+if (-not $script:Ok -and $LookbackDays -gt 7) {
+    # This beta query can run past the 300-second client timeout on large tenants. Retry once on 7 days.
+    $short = (Get-Date).ToUniversalTime().AddDays(-7).ToString('yyyy-MM-ddTHH:mm:ssZ')
+    Yellow "Retrying device code sign-ins over the last 7 days only. Days 8 to $LookbackDays are NOT covered; rerun with -LookbackDays to check them in pieces."
+    $f = & $enc "createdDateTime ge $short and authenticationProtocol eq 'deviceCode'"
+    $dcs = Get-All "$GraphBase/beta/auditLogs/signIns?`$filter=$f&`$top=999" 'device code sign-ins (7 days)'
+    if ($script:Ok) { $script:Findings-- }   # the retry worked, so the timeout above is not a finding
+}
 if ($script:Ok -and -not $dcs) { Plain 'None in the window. Consistent with an enforced block.' }
 foreach ($s in ($dcs | Sort-Object createdDateTime -Descending)) {
     $line = "{0}  {1}  {2}  {3}" -f $s.createdDateTime, $s.userPrincipalName, $s.ipAddress, $s.appDisplayName
@@ -150,7 +158,7 @@ Section 5 'Device registrations: bursts and attacker naming pattern'
 # Ask Graph for device events only. Pulling every audit event for 30 days on a large tenant
 # runs long enough for the sign-in token to expire mid-paging.
 $f = & $enc "activityDateTime ge $since and category eq 'Device'"
-$devEv = @(Get-All "$GraphBase/v1.0/auditLogs/directoryAudits?`$filter=$f&`$top=999" 'device audit events')
+$devEv = Get-All "$GraphBase/v1.0/auditLogs/directoryAudits?`$filter=$f&`$top=999" 'device audit events'
 if ($script:Ok) {
     Plain "$($devEv.Count) device-related audit event(s) in the window."
     foreach ($grp in ($devEv | Group-Object { $_.initiatedBy.user.userPrincipalName } | Where-Object Name)) {
