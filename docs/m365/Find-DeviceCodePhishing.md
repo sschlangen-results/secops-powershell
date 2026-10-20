@@ -11,7 +11,7 @@
 | Module | `Microsoft.Graph.Authentication` |
 | Licensing | Entra ID P1 for sign-in logs |
 | Roles you need | Global Reader plus Reports Reader, or Security Reader |
-| Run time | One to five minutes, longer on very large tenants |
+| Run time | A few minutes. On tenants with thousands of users, sign-in queries can take over five minutes and the script retries them on the last 7 days. |
 
 ## Why this exists
 
@@ -26,7 +26,7 @@ pwsh -NoProfile -File .\scripts\m365\Find-DeviceCodePhishing.ps1 -Tenant custome
 | Option | Use it when |
 |---|---|
 | `-KnownEgress '203.0.113.','198.51.100.'` | You know the office or VPN public IP ranges. Broker sign-ins from inside them are skipped. |
-| `-LookbackDays 14` | You want a shorter window. The maximum is 30. |
+| `-LookbackDays 7` | The tenant is large and a sign-in query timed out. Run 7 days at a time. The maximum is 30. |
 | `-DeviceCode` | You can't open a browser on this machine. |
 | `-Environment USGov` | GCC High or DoD tenants only. |
 
@@ -36,7 +36,7 @@ pwsh -NoProfile -File .\scripts\m365\Find-DeviceCodePhishing.ps1 -Tenant custome
 2. Successful device code sign-ins
 3. Device code sign-ins blocked by Conditional Access, error 53003
 4. Microsoft Authentication Broker sign-ins from outside your known egress, grouped by any IP serving several accounts
-5. Bursts of device registrations by one account, and device names that match current kit naming
+5. Bursts of new device registrations by one account, and device names that match current kit naming
 6. Automation user agents such as python-requests or curl
 
 ## What the colors mean here
@@ -44,7 +44,7 @@ pwsh -NoProfile -File .\scripts\m365\Find-DeviceCodePhishing.ps1 -Tenant custome
 | Color | In this script |
 |---|---|
 | 🔴 Red | A successful device code sign-in to a normal app. A Conditional Access block that is missing or not enforced. A burst of device registrations. A device named like a kit device. An automation user agent. Any check that could not run. |
-| 🟡 Yellow | A blocked device code attempt: that user typed a stranger's code and probably did not report it. A device code sign-in to an admin command-line tool. An outside IP shared by several accounts. Exclusions on the block policy. |
+| 🟡 Yellow | A query that timed out and was retried on 7 days. A blocked device code attempt: that user typed a stranger's code and probably did not report it. A device code sign-in to an admin command-line tool. An outside IP shared by several accounts. Exclusions on the block policy. |
 | Plain | Counts and context. |
 
 **About admin tools.** Your own admin sessions in Graph PowerShell, Teams PowerShell or Exchange PowerShell often use device code sign-in. They show yellow, not red. Confirm each one was yours. Attackers can use the same clients.

@@ -140,6 +140,13 @@ foreach ($s in ($dcs | Sort-Object createdDateTime -Descending)) {
 Section 4 'Authentication Broker sign-ins from outside known egress'
 $f = & $enc "createdDateTime ge $since and appId eq '$BROKER'"
 $brk = Get-All "$GraphBase/v1.0/auditLogs/signIns?`$filter=$f&`$top=999" 'broker sign-ins'
+if (-not $script:Ok -and $LookbackDays -gt 7) {
+    $short = (Get-Date).ToUniversalTime().AddDays(-7).ToString('yyyy-MM-ddTHH:mm:ssZ')
+    Yellow "Retrying broker sign-ins over the last 7 days only. Days 8 to $LookbackDays are NOT covered."
+    $f = & $enc "createdDateTime ge $short and appId eq '$BROKER'"
+    $brk = Get-All "$GraphBase/v1.0/auditLogs/signIns?`$filter=$f&`$top=999" 'broker sign-ins (7 days)'
+    if ($script:Ok) { $script:Findings-- }
+}
 $odd = @($brk | Where-Object { -not (Test-Known $_.ipAddress) })
 if ($script:Ok) {
     Plain ("{0} broker sign-in(s), {1} outside known egress{2}." -f $brk.Count, $odd.Count, $(if (-not $KnownEgress) { ' (no -KnownEgress given, so all count)' } else { '' }))
@@ -160,12 +167,15 @@ Section 5 'Device registrations: bursts and attacker naming pattern'
 $f = & $enc "activityDateTime ge $since and category eq 'Device'"
 $devEv = Get-All "$GraphBase/v1.0/auditLogs/directoryAudits?`$filter=$f&`$top=999" 'device audit events'
 if ($script:Ok) {
-    Plain "$($devEv.Count) device-related audit event(s) in the window."
-    foreach ($grp in ($devEv | Group-Object { $_.initiatedBy.user.userPrincipalName } | Where-Object Name)) {
+    # One normal enrollment writes several events (add device, add owner, add registered user),
+    # so only count actual new devices when looking for bursts.
+    $newDev = @($devEv | Where-Object { $_.activityDisplayName -in 'Add device','Register device' })
+    Plain "$($devEv.Count) device audit event(s) in the window, $($newDev.Count) of them new device registrations."
+    foreach ($grp in ($newDev | Group-Object { $_.initiatedBy.user.userPrincipalName } | Where-Object Name)) {
         $ev = @($grp.Group | Sort-Object activityDateTime)
         for ($i = 0; $i -lt $ev.Count; $i++) {
             $win = @($ev | Where-Object { $d = ([datetime]$_.activityDateTime - [datetime]$ev[$i].activityDateTime).TotalSeconds; $d -ge 0 -and $d -le $BurstWindowSec })
-            if ($win.Count -ge 3) { Red ("{0} made {1} device changes within {2} seconds starting {3}. Kits register devices in bursts." -f $grp.Name, $win.Count, $BurstWindowSec, $ev[$i].activityDateTime); break }
+            if ($win.Count -ge 3) { Red ("{0} registered {1} new devices within {2} seconds starting {3}. Phishing kits register devices in bursts; people do not." -f $grp.Name, $win.Count, $BurstWindowSec, $ev[$i].activityDateTime); break }
         }
     }
 }
