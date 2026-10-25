@@ -29,6 +29,7 @@ These apply to every commit, every pull request and every guide.
 ```
 scripts/<platform>/   the scripts
 docs/<platform>/      one guide per script
+watchlists/           one .psd1 per week for the weekly hunt scripts
 README.md             script table and general how-to
 CONTRIBUTING.md       this page
 .github/              pull request checklist

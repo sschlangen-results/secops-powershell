@@ -32,12 +32,12 @@ pwsh -NoProfile -File .\scripts\m365\Find-DeviceCodePhishing.ps1 -Tenant custome
 
 ## What it checks
 
-1. Whether a Conditional Access policy blocks the device code flow, whether it is enforced, and who is excluded
-2. Successful device code sign-ins
-3. Device code sign-ins blocked by Conditional Access, error 53003
-4. Microsoft Authentication Broker sign-ins from outside your known egress, grouped by any IP serving several accounts
-5. Bursts of new device registrations by one account, and device names that match current kit naming
-6. Automation user agents such as python-requests or curl
+1. Whether a Conditional Access policy blocks the device code flow, whether it is enforced, and who is excluded.
+2. Successful device code sign-ins.
+3. Device code sign-ins blocked by Conditional Access, error 53003.
+4. Microsoft Authentication Broker sign-ins from outside your known egress, grouped by any IP serving several accounts.
+5. Bursts of new device registrations by one account, and device names that match current kit naming.
+6. Automation user agents such as python-requests or curl.
 
 ## What the colors mean here
 

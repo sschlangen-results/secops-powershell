@@ -44,12 +44,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows\Find-UserP
 
 ## What it checks
 
-1. Scheduled tasks that run a program from AppData, Downloads, Desktop, Documents, Temp or `C:\Users\Public`
-2. Run and RunOnce keys and Startup folders that point at those same places
-3. Programs in AppData folders created recently that are not signed by a trusted publisher
-4. Java runtimes and `.java` or `.jar` files under user profiles, and Java running from outside Program Files
-5. Recently downloaded installers with utility-sounding names, like pdf, viewer, convert or reader
-6. Untrusted programs running from AppData, with the addresses they are connected to
+1. Scheduled tasks that run a program from AppData, Downloads, Desktop, Documents, Temp or `C:\Users\Public`.
+2. Run and RunOnce keys and Startup folders that point at those same places.
+3. Programs in AppData folders created recently that are not signed by a trusted publisher.
+4. Java runtimes and `.java` or `.jar` files under user profiles, and Java running from outside Program Files.
+5. Recently downloaded installers with utility-sounding names, like pdf, viewer, convert or reader.
+6. Untrusted programs running from AppData, with the addresses they are connected to.
 
 Every line starts with `[RED]` or `[YELLOW]`, so the results still read correctly in an RMM console without colors.
 
