@@ -17,11 +17,11 @@
 
 The first look after any of these:
 
-- A user says they clicked a link or entered their password somewhere
-- A risky sign-in, impossible travel or unfamiliar sign-in alert
-- A new MFA method alert
-- A fake IT or help desk call over Teams or phone
-- A device code phishing hit from [`Find-DeviceCodePhishing.ps1`](Find-DeviceCodePhishing.md)
+- A user says they clicked a link or entered their password somewhere.
+- A risky sign-in, impossible travel or unfamiliar sign-in alert.
+- A new MFA method alert.
+- A fake IT or help desk call over Teams or phone.
+- A device code phishing hit from [`Find-DeviceCodePhishing.ps1`](Find-DeviceCodePhishing.md).
 
 ## Run it
 
@@ -42,17 +42,17 @@ Set `-Since` to the day of the click or the alert. Anything after it gets the cl
 
 **Is it compromised?**
 - Sign-ins from a new IP where MFA was satisfied by a claim already in the token, with no fresh prompt. This is the tell for stolen-session phishing.
-- Sign-ins from outside your home countries, and IPs first seen after `-Since`
-- Legacy protocols that skip modern MFA
-- Entra ID Protection risk level and detections
-- MFA methods added or changed after `-Since`
-- Device registrations, app consents and password events after `-Since`
-- With `-IncludeMailbox`: forwarding, rules that forward, redirect, delete or hide mail, and delegates
-- Dormancy: an enabled account nobody uses is an exposure on its own
+- Sign-ins from outside your home countries, and IPs first seen after `-Since`.
+- Legacy protocols that skip modern MFA.
+- Entra ID Protection risk level and detections.
+- MFA methods added or changed after `-Since`.
+- Device registrations, app consents and password events after `-Since`.
+- With `-IncludeMailbox`: forwarding, rules that forward, redirect, delete or hide mail, and delegates.
+- Dormancy: an enabled account nobody uses is an exposure on its own.
 
 **What can it reach?**
-- Active and PIM-eligible directory roles, flagged when privileged
-- Group count, registered devices and devices registered after `-Since`
+- Active and PIM-eligible directory roles, flagged when privileged.
+- Group count, registered devices and devices registered after `-Since`.
 
 ## What the colors mean here
 

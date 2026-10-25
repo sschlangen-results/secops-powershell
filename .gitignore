@@ -13,3 +13,6 @@ results/
 .env*
 .vscode/
 .DS_Store
+
+# DeepAPI research briefs can name customers; keep them out of git
+research-output/

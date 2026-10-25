@@ -25,6 +25,20 @@ Pick the script for your question, open its guide, then follow the steps below.
 | `Find-DeviceCodePhishing.ps1` | Microsoft 365 | Did anyone get phished with an "enter this code" prompt, and did an attacker register a device to stay in? | No | [Open](docs/m365/Find-DeviceCodePhishing.md) |
 | `Invoke-AccountCompromiseReview.ps1` | Microsoft 365 | Is this account compromised, and what could an attacker reach with it? | No | [Open](docs/m365/Invoke-AccountCompromiseReview.md) |
 | `Find-UserProfilePersistence.ps1` | Windows | Is something living in a user's profile and starting itself, like a fake PDF viewer or a dropped Java loader? | No | [Open](docs/windows/Find-UserProfilePersistence.md) |
+| `Find-WeeklyVulnExposure.ps1` | Windows | Does this host run any of this week's vulnerable or backdoored software? Reads a weekly watchlist. | No | [Open](docs/windows/Find-WeeklyVulnExposure.md) |
+| `Find-GitHubSupplyChainIndicators.ps1` | GitHub | Does this organization hold this week's supply-chain indicators, like a secret-stealing workflow or a pinned backdoored package? | No | [Open](docs/github/Find-GitHubSupplyChainIndicators.md) |
+| `Get-KevRecent.ps1` | Research | Which of this week's vulnerabilities has CISA confirmed are exploited? Free. | No | [Open](docs/research/Get-KevRecent.md) |
+| `Invoke-DeepApiResearch.ps1` | Research | What are the fixed versions and indicators for this week's issues, or a customer's public security picture? Optional, paid. | No | [Open](docs/research/Invoke-DeepApiResearch.md) |
+
+### The weekly hunt
+
+When a week brings more advisories than anyone can read, run these in order:
+
+1. `Get-KevRecent.ps1` to see what CISA confirmed is exploited. Free.
+2. `Find-WeeklyVulnExposure.ps1` on Windows hosts through your RMM, and `Find-GitHubSupplyChainIndicators.ps1` against each GitHub organization. Both read the newest file in [`watchlists/`](watchlists/).
+3. Work the "check outside this host" list the Windows script prints: appliances, SaaS platforms and the Microsoft 365 checks in this repo.
+
+> **Optional: AI-assisted research with DeepAPI (paid).** [`Invoke-DeepApiResearch.ps1`](docs/research/Invoke-DeepApiResearch.md) drafts a sourced brief of fixed versions and indicators for this week's issues, or a customer's public security picture before onboarding. It uses your own DeepAPI key and costs cents to about a dollar a question. Nothing else in the repo needs it; the free path above works on its own.
 
 ---
 

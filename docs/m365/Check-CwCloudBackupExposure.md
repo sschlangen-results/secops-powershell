@@ -32,11 +32,11 @@ Only the Cloud Backup and Cloud Management products are affected. ConnectWise Ma
 
 ## What the script checks
 
-1. Whether any of the seven ConnectWise / SkyKick apps exist in the tenant, plus anything named "SkyKick"
-2. For any it finds: admin roles they hold, permissions granted, credentials attached
-3. New secrets or certificates added to **any** app since 2026-10-13
-4. Admin role changes, consents and permission grants since 2026-10-13
-5. App sign-ins from the attacker's IP address (needs Entra ID P1)
+1. Whether any of the seven ConnectWise / SkyKick apps exist in the tenant, plus anything named "SkyKick".
+2. For any it finds: admin roles they hold, permissions granted, credentials attached.
+3. New secrets or certificates added to **any** app since 2026-10-13.
+4. Admin role changes, consents and permission grants since 2026-10-13.
+5. App sign-ins from the attacker's IP address (needs Entra ID P1).
 
 ## What the colors mean here
 
